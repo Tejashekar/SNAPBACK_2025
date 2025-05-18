@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snapback Clone</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex flex-col items-center min-h-screen">
+    <h1 class="text-3xl font-bold my-6">Snapback Clone</h1>
+    <form id="scan-form" class="bg-white p-6 rounded shadow-md w-full max-w-md">
+        <div class="mb-4">
+            <label for="url" class="block text-sm font-medium text-gray-700">Target URL</label>
+            <input type="text" id="url" name="url" placeholder="http://example.com" class="mt-1 p-2 w-full border rounded">
+        </div>
+        <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Start Scan</button>
+    </form>
+    <div id="result" class="mt-6 w-full max-w-md"></div>
+    <a href="/results" class="mt-4 text-blue-500 hover:underline">View All Results</a>
+
+    <script>
+        document.getElementById("scan-form").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const url = document.getElementById("url").value;
+            const formData = new FormData();
+            formData.append("url", url);
+
+            const response = await fetch("/scan", {
+                method: "POST",
+                body: formData
+            });
+            const result = await response.json();
+
+            if (result.status === "error") {
+                const resultDiv = document.getElementById("result");
+                resultDiv.innerHTML = `<div class="bg-red-100 p-4 rounded shadow-md"><p class="text-red-700">Error: ${result.message}</p></div>`;
+                return;
+            }
+
+            const resultDiv = document.getElementById("result");
+            resultDiv.innerHTML = `
+                <div class="bg-white p-4 rounded shadow-md">
+                    <h2 class="text-xl font-semibold">Scan Result</h2>
+                    <p><strong>URL:</strong> ${result.url}</p>
+                    <p><strong>Service:</strong> ${result.service}</p>
+                    ${result.screenshot ? `<img src="${result.screenshot}" alt="Screenshot" class="mt-2 w-full">` : '<p>No screenshot available</p>'}
+                    <h3 class="mt-4 font-semibold">Brute-Force Results:</h3>
+                    <ul>
+                        ${result.brute_force.map(attempt => `
+                            <li>Username: ${attempt.username}, Password: ${attempt.password}, Result: ${attempt.result}</li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
+        });
+    </script>
+</body>
+</html>
