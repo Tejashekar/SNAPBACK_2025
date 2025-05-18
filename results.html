@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan Results</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex flex-col items-center min-h-screen">
+    <h1 class="text-3xl font-bold my-6">Scan Results</h1>
+    <div class="w-full max-w-4xl">
+        {% for result in results %}
+            <div class="bg-white p-6 rounded shadow-md mb-4">
+                <h2 class="text-xl font-semibold">Result for {{ result.url }}</h2>
+                <p><strong>Service:</strong> {{ result.service }}</p>
+                {% if result.screenshot %}
+                    <img src="{{ result.screenshot }}" alt="Screenshot" class="mt-2 w-full">
+                {% else %}
+                    <p>No screenshot available</p>
+                {% endif %}
+                <h3 class="mt-4 font-semibold">Brute-Force Results:</h3>
+                <ul>
+                    {% for attempt in result.brute_force %}
+                        <li>Username: {{ attempt.username }}, Password: {{ attempt.password }}, Result: {{ attempt.result }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        {% endfor %}
+    </div>
+    <a href="/" class="mt-4 text-blue-500 hover:underline">Back to Scan</a>
+</body>
+</html>
