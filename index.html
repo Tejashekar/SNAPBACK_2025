@@ -5,53 +5,257 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snapback Clone</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .gradient-bg {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .loading-dots::after {
+            content: '...';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60% { content: '...'; }
+            80%, 100% { content: ''; }
+        }
+    </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center min-h-screen">
-    <h1 class="text-3xl font-bold my-6">Snapback Clone</h1>
-    <form id="scan-form" class="bg-white p-6 rounded shadow-md w-full max-w-md">
-        <div class="mb-4">
-            <label for="url" class="block text-sm font-medium text-gray-700">Target URL</label>
-            <input type="text" id="url" name="url" placeholder="http://example.com" class="mt-1 p-2 w-full border rounded">
+<body class="min-h-screen bg-gray-50">
+    <!-- Animated Background Header -->
+    <div class="gradient-bg text-white py-16 mb-8">
+        <div class="container mx-auto px-4">
+            <h1 class="text-5xl font-bold text-center mb-4 animate__animated animate__fadeInDown">Snapback Clone</h1>
+            <p class="text-xl text-center opacity-90 animate__animated animate__fadeInUp">Advanced Web Security Scanner</p>
         </div>
-        <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded hover:bg-blue-600">Start Scan</button>
-    </form>
-    <div id="result" class="mt-6 w-full max-w-md"></div>
-    <a href="/results" class="mt-4 text-blue-500 hover:underline">View All Results</a>
+    </div>
+
+    <div class="container mx-auto px-4 max-w-4xl">
+        <!-- Main Content -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <!-- Scan Form Card -->
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <h2 class="text-2xl font-semibold mb-6 text-gray-800">Start New Scan</h2>
+                <form id="scan-form" class="space-y-4">
+                    <div>
+                        <label for="url" class="block text-sm font-medium text-gray-700 mb-2">Target URL</label>
+                        <div class="relative">
+                            <input type="text" id="url" name="url" 
+                                placeholder="https://example.com" 
+                                class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200"
+                                required>
+                        </div>
+                    </div>
+                    <button type="submit" 
+                        class="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-600 hover:to-blue-700 transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                        Start Scan
+                    </button>
+                </form>
+            </div>
+
+            <!-- Quick Stats Card -->
+            <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                <h2 class="text-2xl font-semibold mb-6 text-gray-800">Quick Stats</h2>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-blue-50 p-4 rounded-lg">
+                        <p class="text-sm text-blue-600 font-medium">Total Scans</p>
+                        <p class="text-2xl font-bold text-blue-700" id="total-scans">0</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded-lg">
+                        <p class="text-sm text-green-600 font-medium">Successful</p>
+                        <p class="text-2xl font-bold text-green-700" id="successful-scans">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section -->
+        <div id="result" class="mt-8"></div>
+
+        <!-- View All Results Button -->
+        <div class="text-center mt-8">
+            <a href="/results" 
+                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                View All Results
+                <svg class="ml-2 -mr-1 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </div>
+    </div>
 
     <script>
         document.getElementById("scan-form").addEventListener("submit", async (e) => {
             e.preventDefault();
-            const url = document.getElementById("url").value;
-            const formData = new FormData();
-            formData.append("url", url);
-
-            const response = await fetch("/scan", {
-                method: "POST",
-                body: formData
-            });
-            const result = await response.json();
-
-            if (result.status === "error") {
-                const resultDiv = document.getElementById("result");
-                resultDiv.innerHTML = `<div class="bg-red-100 p-4 rounded shadow-md"><p class="text-red-700">Error: ${result.message}</p></div>`;
-                return;
-            }
-
             const resultDiv = document.getElementById("result");
             resultDiv.innerHTML = `
-                <div class="bg-white p-4 rounded shadow-md">
-                    <h2 class="text-xl font-semibold">Scan Result</h2>
-                    <p><strong>URL:</strong> ${result.url}</p>
-                    <p><strong>Service:</strong> ${result.service}</p>
-                    ${result.screenshot ? `<img src="${result.screenshot}" alt="Screenshot" class="mt-2 w-full">` : '<p>No screenshot available</p>'}
-                    <h3 class="mt-4 font-semibold">Brute-Force Results:</h3>
-                    <ul>
-                        ${result.brute_force.map(attempt => `
-                            <li>Username: ${attempt.username}, Password: ${attempt.password}, Result: ${attempt.result}</li>
-                        `).join('')}
-                    </ul>
+                <div class="bg-white rounded-xl shadow-lg p-6 animate__animated animate__fadeIn">
+                    <div class="flex items-center justify-center space-x-2">
+                        <div class="w-4 h-4 bg-blue-500 rounded-full animate-bounce"></div>
+                        <div class="w-4 h-4 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.2s"></div>
+                        <div class="w-4 h-4 bg-blue-500 rounded-full animate-bounce" style="animation-delay: 0.4s"></div>
+                        <span class="text-lg font-medium text-gray-700">Scanning in progress</span>
+                    </div>
                 </div>
             `;
+            
+            try {
+                const url = document.getElementById("url").value;
+                console.log("Starting scan for URL:", url);
+                
+                const formData = new FormData();
+                formData.append("url", url);
+
+                console.log("Sending request to /scan");
+                const response = await fetch("/scan", {
+                    method: "POST",
+                    body: formData
+                });
+                
+                console.log("Response received:", response.status);
+                const result = await response.json();
+                console.log("Result:", result);
+
+                if (result.status === "error") {
+                    resultDiv.innerHTML = `
+                        <div class="bg-red-50 rounded-xl shadow-lg p-6 animate__animated animate__fadeIn">
+                            <div class="flex items-center space-x-2 text-red-700">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <p class="text-lg font-medium">Error: ${result.message}</p>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                resultDiv.innerHTML = `
+                    <div class="bg-white rounded-xl shadow-lg p-6 animate__animated animate__fadeIn">
+                        <h2 class="text-2xl font-semibold mb-4 text-gray-800">Scan Result</h2>
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600">Target URL</p>
+                                <p class="text-lg font-medium text-gray-800">${result.url}</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600">Service Type</p>
+                                <p class="text-lg font-medium text-gray-800">${result.service}</p>
+                            </div>
+                            ${result.screenshot ? `
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600 mb-2">Screenshot</p>
+                                    <img src="${result.screenshot}" alt="Screenshot" class="w-full rounded-lg shadow-md">
+                                </div>
+                            ` : `
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600">Screenshot</p>
+                                    <p class="text-gray-500">No screenshot available</p>
+                                </div>
+                            `}
+                            
+                            <!-- Vulnerability Scan Results -->
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <div class="flex items-center justify-between mb-4">
+                                    <p class="text-sm text-gray-600">Vulnerability Scan Results</p>
+                                    <span class="px-3 py-1 rounded-full text-sm font-medium ${
+                                        result.vulnerabilities.length === 0 
+                                            ? 'bg-green-100 text-green-800' 
+                                            : 'bg-red-100 text-red-800'
+                                    }">
+                                        ${result.vulnerabilities.length} Issues Found
+                                    </span>
+                                </div>
+                                
+                                ${result.vulnerabilities.length > 0 ? `
+                                    <div class="space-y-3">
+                                        ${result.vulnerabilities.map(vuln => `
+                                            <div class="bg-white p-3 rounded-lg border-l-4 ${
+                                                vuln.severity === 'Critical' ? 'border-red-500' :
+                                                vuln.severity === 'High' ? 'border-orange-500' :
+                                                'border-yellow-500'
+                                            }">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="font-medium text-gray-800">${vuln.type || vuln.header || vuln.file}</p>
+                                                        <p class="text-sm text-gray-600">${vuln.description || `Parameter: ${vuln.parameter}`}</p>
+                                                        ${vuln.payload ? `<p class="text-sm text-gray-500 mt-1">Payload: <code class="bg-gray-100 px-1 rounded">${vuln.payload}</code></p>` : ''}
+                                                    </div>
+                                                    <span class="px-2 py-1 rounded text-xs font-medium ${
+                                                        vuln.severity === 'Critical' ? 'bg-red-100 text-red-800' :
+                                                        vuln.severity === 'High' ? 'bg-orange-100 text-orange-800' :
+                                                        'bg-yellow-100 text-yellow-800'
+                                                    }">
+                                                        ${vuln.severity}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : `
+                                    <div class="text-center py-4">
+                                        <svg class="w-12 h-12 mx-auto text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                        </svg>
+                                        <p class="mt-2 text-gray-600">No vulnerabilities found</p>
+                                    </div>
+                                `}
+                            </div>
+
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-2">Brute-Force Results</p>
+                                <div class="space-y-2">
+                                    ${result.brute_force.map(attempt => `
+                                        <div class="flex items-center justify-between bg-white p-2 rounded">
+                                            <span class="text-gray-700">${attempt.username}:${attempt.password}</span>
+                                            <span class="px-2 py-1 rounded text-sm ${
+                                                attempt.result === 'Success' ? 'bg-green-100 text-green-800' :
+                                                attempt.result === 'Failed' ? 'bg-red-100 text-red-800' :
+                                                'bg-yellow-100 text-yellow-800'
+                                            }">${attempt.result}</span>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                // Update stats
+                document.getElementById('total-scans').textContent = 
+                    parseInt(document.getElementById('total-scans').textContent) + 1;
+                if (result.status === 'success') {
+                    document.getElementById('successful-scans').textContent = 
+                        parseInt(document.getElementById('successful-scans').textContent) + 1;
+                }
+            } catch (error) {
+                console.error("Error during scan:", error);
+                resultDiv.innerHTML = `
+                    <div class="bg-red-50 rounded-xl shadow-lg p-6 animate__animated animate__fadeIn">
+                        <div class="flex items-center space-x-2 text-red-700">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <p class="text-lg font-medium">Error: ${error.message}</p>
+                        </div>
+                    </div>
+                `;
+            }
         });
     </script>
 </body>
