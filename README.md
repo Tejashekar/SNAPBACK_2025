@@ -6,12 +6,13 @@ Snapback Clone is a web application built with Flask that allows users to scan a
 - Takes a screenshot of the target URL.
 - Identifies the web service running on the target URL.
 - Simulates a brute-force attack using predefined credentials.
+- Performs passive Vulnerability assessment
 
 ## Features
 - **Screenshot Capture**: Uses Playwright to take screenshots of the target URL.
 - **Service Fingerprinting**: Identifies the web service running on the target URL.
 - **Brute-Force Simulation**: Tests predefined credentials against the target URL.
-
+- **Vulnerabilities Checked **:XSS (Cross-Site Scripting) Detection, SQL Injection Detection, Security Headers Check, Sensitive Files Detection:
 ## Prerequisites
 - Python 3.6 or higher
 - Flask
