@@ -5,28 +5,164 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Scan Results</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        .gradient-bg {
+            background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+            background-size: 400% 400%;
+            animation: gradient 15s ease infinite;
+        }
+        .card-hover {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center min-h-screen">
-    <h1 class="text-3xl font-bold my-6">Scan Results</h1>
-    <div class="w-full max-w-4xl">
-        {% for result in results %}
-            <div class="bg-white p-6 rounded shadow-md mb-4">
-                <h2 class="text-xl font-semibold">Result for {{ result.url }}</h2>
-                <p><strong>Service:</strong> {{ result.service }}</p>
-                {% if result.screenshot %}
-                    <img src="{{ result.screenshot }}" alt="Screenshot" class="mt-2 w-full">
-                {% else %}
-                    <p>No screenshot available</p>
-                {% endif %}
-                <h3 class="mt-4 font-semibold">Brute-Force Results:</h3>
-                <ul>
-                    {% for attempt in result.brute_force %}
-                        <li>Username: {{ attempt.username }}, Password: {{ attempt.password }}, Result: {{ attempt.result }}</li>
-                    {% endfor %}
-                </ul>
-            </div>
-        {% endfor %}
+<body class="min-h-screen bg-gray-50">
+    <!-- Animated Background Header -->
+    <div class="gradient-bg text-white py-16 mb-8">
+        <div class="container mx-auto px-4">
+            <h1 class="text-5xl font-bold text-center mb-4 animate__animated animate__fadeInDown">Scan Results</h1>
+            <p class="text-xl text-center opacity-90 animate__animated animate__fadeInUp">View all security scan results</p>
+        </div>
     </div>
-    <a href="/" class="mt-4 text-blue-500 hover:underline">Back to Scan</a>
+
+    <div class="container mx-auto px-4 max-w-4xl">
+        {% if results %}
+            <div class="space-y-6">
+                {% for result in results %}
+                    <div class="bg-white rounded-xl shadow-lg p-6 card-hover animate__animated animate__fadeIn">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-2xl font-semibold text-gray-800">Result for {{ result.url }}</h2>
+                            <span class="px-3 py-1 rounded-full text-sm font-medium 
+                                {% if result.status == 'success' %}
+                                    bg-green-100 text-green-800
+                                {% else %}
+                                    bg-red-100 text-red-800
+                                {% endif %}">
+                                {{ result.status }}
+                            </span>
+                        </div>
+                        
+                        <div class="space-y-4">
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600">Service Type</p>
+                                <p class="text-lg font-medium text-gray-800">{{ result.service }}</p>
+                            </div>
+
+                            {% if result.vulnerabilities %}
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <p class="text-sm text-gray-600">Vulnerability Scan Results</p>
+                                        <span class="px-3 py-1 rounded-full text-sm font-medium 
+                                            {% if result.vulnerabilities|length == 0 %}
+                                                bg-green-100 text-green-800
+                                            {% else %}
+                                                bg-red-100 text-red-800
+                                            {% endif %}">
+                                            {{ result.vulnerabilities|length }} Issues Found
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="space-y-3">
+                                        {% for vuln in result.vulnerabilities %}
+                                            <div class="bg-white p-3 rounded-lg border-l-4 
+                                                {% if vuln.severity == 'Critical' %}
+                                                    border-red-500
+                                                {% elif vuln.severity == 'High' %}
+                                                    border-orange-500
+                                                {% else %}
+                                                    border-yellow-500
+                                                {% endif %}">
+                                                <div class="flex items-center justify-between">
+                                                    <div>
+                                                        <p class="font-medium text-gray-800">{{ vuln.type or vuln.header or vuln.file }}</p>
+                                                        <p class="text-sm text-gray-600">{{ vuln.description or 'Parameter: ' + vuln.parameter }}</p>
+                                                        {% if vuln.payload %}
+                                                            <p class="text-sm text-gray-500 mt-1">Payload: <code class="bg-gray-100 px-1 rounded">{{ vuln.payload }}</code></p>
+                                                        {% endif %}
+                                                    </div>
+                                                    <span class="px-2 py-1 rounded text-xs font-medium 
+                                                        {% if vuln.severity == 'Critical' %}
+                                                            bg-red-100 text-red-800
+                                                        {% elif vuln.severity == 'High' %}
+                                                            bg-orange-100 text-orange-800
+                                                        {% else %}
+                                                            bg-yellow-100 text-yellow-800
+                                                        {% endif %}">
+                                                        {{ vuln.severity }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            {% if result.screenshot %}
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600 mb-2">Screenshot</p>
+                                    <img src="{{ result.screenshot }}" alt="Screenshot" class="w-full rounded-lg shadow-md">
+                                </div>
+                            {% else %}
+                                <div class="bg-gray-50 p-4 rounded-lg">
+                                    <p class="text-sm text-gray-600">Screenshot</p>
+                                    <p class="text-gray-500">No screenshot available</p>
+                                </div>
+                            {% endif %}
+
+                            <div class="bg-gray-50 p-4 rounded-lg">
+                                <p class="text-sm text-gray-600 mb-2">Brute-Force Results</p>
+                                <div class="space-y-2">
+                                    {% for attempt in result.brute_force %}
+                                        <div class="flex items-center justify-between bg-white p-2 rounded">
+                                            <span class="text-gray-700">{{ attempt.username }}:{{ attempt.password }}</span>
+                                            <span class="px-2 py-1 rounded text-sm 
+                                                {% if attempt.result == 'Success' %}
+                                                    bg-green-100 text-green-800
+                                                {% elif attempt.result == 'Failed' %}
+                                                    bg-red-100 text-red-800
+                                                {% else %}
+                                                    bg-yellow-100 text-yellow-800
+                                                {% endif %}">
+                                                {{ attempt.result }}
+                                            </span>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center animate__animated animate__fadeIn">
+                <svg class="w-16 h-16 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                <h3 class="text-xl font-medium text-gray-900 mb-2">No Results Yet</h3>
+                <p class="text-gray-500">Start a new scan to see results here.</p>
+            </div>
+        {% endif %}
+
+        <!-- Back to Scan Button -->
+        <div class="text-center mt-8">
+            <a href="/" 
+                class="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 transition-all duration-200 transform hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <svg class="mr-2 -ml-1 w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+                Back to Scan
+            </a>
+        </div>
+    </div>
 </body>
 </html>
